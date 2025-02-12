@@ -1,11 +1,48 @@
-current_distro=$(sh .get_distro 2>/dev/null)
+#Install packages if they do not exit
+packages=("neovim" "fzf" "eza" "zoxide" "bat" "git" "curl")
 
+if command -v dnf &>/dev/null; then
+  for package in "${packages[@]}"; do
+    if ! rpm -q "$package" &>/dev/null; then
+      echo "Package $package is missing. Installing..."
+      sudo dnf install "$package" -y
+    fi
+  done
+
+elif command -v apt &>/dev/null; then
+  for package in "${packages[@]}"; do
+    if ! dpkg -l | grep -q "$package"; then
+      echo "Package $package is missing. Installing..."
+      sudo apt install "$package" -y
+    fi
+  done
+fi
+
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+if ! command -v brew &>/dev/null; then
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+   eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+fi
+
+if ! command -v yazi &>/dev/null; then
+   brew install yazi
+fi
+
+if ! command -v fastfetch &>/dev/null; then
+   brew install fastfetch
+fi
+
+#set kitty display and run fastfetch
+current_distro=$(sh .get_distro 2>/dev/null)
 if [ "$TERM" = "xterm-kitty" ]; then 
    export TERM=xterm-256color
    if [[ $current_distro =~ "Fedora" ]]; then
       fastfetch --logo ~/.config/icons/beals_logo.png --logo-width 28
    fi
+else 
+   fastfetch
 fi
+
 
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
@@ -26,7 +63,7 @@ fi
 source "${ZINIT_HOME}/zinit.zsh"
 # Add in Powerlevel10k
 
-if [[ $DISPLAY ]];then
+if [[ $DISPLAY ]] or [[ $TERM =='xterm-256color']]; then
  zinit ice depth=1; zinit light romkatv/powerlevel10k
 fi
 
@@ -58,7 +95,6 @@ setopt hist_ignore_dups
 setopt hist_find_no_dups
 
 
-eval "$(fzf --zsh)"
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 zstyle ':completion:*' menu no
@@ -75,20 +111,19 @@ if [[ $(uname) == "Darwin" ]]; then
 
 ## Linux
 elif [[ $(uname) == "Linux" ]] && [[ $current_distro =~ "Fedora" ]]; then
-   eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
    alias update='sudo dnf upgrade --refresh -y; sudo pkcon update; fwupdmgr update; flatpak update -y; brew update; brew upgrade;'
    alias startp='startplasma-wayland'
    alias logoutp='loginctl terminate-user beals'
-   alias tclock='tty-clock -c -C 5 -r -n -r -f "%A, %B %d %Y"'
    alias bios='systemctl reboot --firmware-setup'
-   alias neofetch='fastfetch --logo ~/.config/icons/beals_logo.png' 
 fi
 
+alias neofetch='fastfetch --logo ~/.config/icons/beals_logo.png' 
+alias cat='bat'
 alias ls='eza --color --icons'
-alias tree="tree -L 3 -a -I '.git' --charset X "
+alias tree="tree -L 3 -a -I '.git"
+alias tclock='tty-clock -c -C 5 -r -n -r -f "%A, %B %d %Y"'
 alias vim='nvim'
 alias c='clear'
-alias cat='bat'
 alias y='local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
 	yazi "$@" --cwd-file="$tmp"
 	if cwd="$(command cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
