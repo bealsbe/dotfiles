@@ -63,8 +63,8 @@ fi
 source "${ZINIT_HOME}/zinit.zsh"
 # Add in Powerlevel10k
 
-if [[ $DISPLAY ]] or [[ $TERM =='xterm-256color']]; then
- zinit ice depth=1; zinit light romkatv/powerlevel10k
+if [[ $DISPLAY ]] || [[ $TERM == 'xterm-256color' ]]; then
+  zinit ice depth=1; zinit light romkatv/powerlevel10k
 fi
 
 # Add in zsh plugins
