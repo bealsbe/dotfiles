@@ -38,8 +38,13 @@ if ! command -v eza &>/dev/null; then
    brew install eza
 fi
 
-#set kitty display and run fastfetch
+
+if ! [ -f ".get_distro" ]; then
+   curl https://raw.githubusercontent.com/bealsbe/dotfiles/refs/heads/master/.get_distro -o .get_distro
+fi
 current_distro=$(sh .get_distro 2>/dev/null)
+
+#set kitty display and run fastfetch
 if [ "$TERM" = "xterm-kitty" ]; then 
    export TERM=xterm-256color
    if [[ $current_distro =~ "Fedora" ]]; then
