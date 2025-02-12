@@ -80,7 +80,7 @@ elif [[ $(uname) == "Linux" ]] && [[ $current_distro =~ "Fedora" ]]; then
    alias startp='startplasma-wayland'
    alias logoutp='loginctl terminate-user beals'
    alias tclock='tty-clock -c -C 5 -r -n -r -f "%A, %B %d %Y"'
-   alias bios='systemctl reboot --firmware-setup'i
+   alias bios='systemctl reboot --firmware-setup'
    alias neofetch='fastfetch --logo ~/.config/icons/beals_logo.png' 
 fi
 
