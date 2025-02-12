@@ -1,5 +1,12 @@
 #Install packages if they do not exit
-packages=("neovim" "fzf" "eza" "zoxide" "bat" "git" "curl")
+packages=("neovim" "fzf" "zoxide" "bat" "git" "tar")
+
+
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+if ! command -v brew &>/dev/null; then
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+   eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+fi
 
 if command -v dnf &>/dev/null; then
   for package in "${packages[@]}"; do
@@ -18,11 +25,6 @@ elif command -v apt &>/dev/null; then
   done
 fi
 
-eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-if ! command -v brew &>/dev/null; then
-   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-   eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-fi
 
 if ! command -v yazi &>/dev/null; then
    brew install yazi
@@ -30,6 +32,10 @@ fi
 
 if ! command -v fastfetch &>/dev/null; then
    brew install fastfetch
+fi
+
+if ! command -v eza &>/dev/null; then
+   brew install eza
 fi
 
 #set kitty display and run fastfetch
@@ -115,13 +121,13 @@ elif [[ $(uname) == "Linux" ]] && [[ $current_distro =~ "Fedora" ]]; then
    alias startp='startplasma-wayland'
    alias logoutp='loginctl terminate-user beals'
    alias bios='systemctl reboot --firmware-setup'
+   alias tclock='tty-clock -c -C 5 -r -n -r -f "%A, %B %d %Y"'
 fi
 
 alias neofetch='fastfetch --logo ~/.config/icons/beals_logo.png' 
 alias cat='bat'
 alias ls='eza --color --icons'
 alias tree="tree -L 3 -a -I '.git"
-alias tclock='tty-clock -c -C 5 -r -n -r -f "%A, %B %d %Y"'
 alias vim='nvim'
 alias c='clear'
 alias y='local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
