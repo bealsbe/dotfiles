@@ -72,8 +72,8 @@ if [ ! -d "$ZINIT_HOME" ]; then
 fi
 
 source "${ZINIT_HOME}/zinit.zsh"
-# Add in Powerlevel10k
 
+# Add in Powerlevel10k
 if [[ $DISPLAY ]] || [[ $TERM == 'xterm-256color' ]]; then
   zinit ice depth=1; zinit light romkatv/powerlevel10k
 fi
