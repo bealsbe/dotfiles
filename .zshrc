@@ -1,12 +1,34 @@
+
 #Install packages if they do not exit
-packages=("neovim" "fzf" "zoxide" "bat" "git" "tar")
+packages=("neovim" "fzf" "zoxide" "bat" "tar")
 
+homebrewpath=false
 
-eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-if ! command -v brew &>/dev/null; then
+if [[ $(uname) == "Darwin" ]] && ! command -v brew &>/dev/null;  then
    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-   eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+elif ! command -v brew &>/dev/null; then 
+   git clone https://github.com/Homebrew/brew
+   mv brew .homebrew
+   export PATH=${HOME}/.homebrew/bin:${PATH}
+   homebrewpath=true
 fi
+
+if ! command -v yazi &>/dev/null; then
+   brew install yazi
+fi
+
+
+if ! command -v fastfetch &>/dev/null; then
+   brew install fastfetch
+fi
+
+
+if ! command -v eza &>/dev/null; then
+   brew install eza
+fi
+
+
 
 if command -v dnf &>/dev/null; then
   for package in "${packages[@]}"; do
@@ -25,31 +47,20 @@ elif command -v apt &>/dev/null; then
   done
 fi
 
-
-if ! command -v yazi &>/dev/null; then
-   brew install yazi
-fi
-
-if ! command -v fastfetch &>/dev/null; then
-   brew install fastfetch
-fi
-
-if ! command -v eza &>/dev/null; then
-   brew install eza
-fi
-
-
 if ! [ -f ".get_distro" ]; then
    curl https://raw.githubusercontent.com/bealsbe/dotfiles/refs/heads/master/.get_distro -o .get_distro
+   chmod +x .get_distro
 fi
-current_distro=$(sh .get_distro 2>/dev/null)
 
+
+current_distro=$(sh .get_distro 2>/dev/null)
 #set kitty display and run fastfetch
 if [ "$TERM" = "xterm-kitty" ]; then 
    export TERM=xterm-256color
-   if [[ $current_distro =~ "Fedora" ]]; then
+fi
+
+if [[ $current_distro =~ "Fedora" ]]; then
       fastfetch --logo ~/.config/icons/beals_logo.png --logo-width 28
-   fi
 else 
    fastfetch
 fi
@@ -117,19 +128,16 @@ unsetopt nomatch
 export PATH="<path>:$PATH"
 export EDITOR=nvim
 
-## OSX
-if [[ $(uname) == "Darwin" ]]; then
-
-## Linux
-elif [[ $(uname) == "Linux" ]] && [[ $current_distro =~ "Fedora" ]]; then
+if [[ $(uname) == "Linux" ]] && [[ $current_distro =~ "Fedora" ]]; then
    alias update='sudo dnf upgrade --refresh -y; sudo pkcon update; fwupdmgr update; flatpak update -y; brew update; brew upgrade;'
    alias startp='startplasma-wayland'
    alias logoutp='loginctl terminate-user beals'
    alias bios='systemctl reboot --firmware-setup'
    alias tclock='tty-clock -c -C 5 -r -n -r -f "%A, %B %d %Y"'
+   alias neofetch='fastfetch --logo ~/.config/icons/beals_logo.png' 
+
 fi
 
-alias neofetch='fastfetch --logo ~/.config/icons/beals_logo.png' 
 alias cat='bat'
 alias ls='eza --color --icons'
 alias tree="tree -L 3 -a -I '.git"
@@ -150,3 +158,7 @@ zinit light-mode for \
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+if [[ $(uname) == "Linux" ]] && [[ $homebrew == false ]]; then
+   export PATH=${HOME}/homebrew/bin:${PATH}
+fi
