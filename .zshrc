@@ -1,66 +1,93 @@
 
-#Install packages if they do not exit
-packages=("neovim" "fzf" "zoxide" "bat" "tar")
+if ! [[ -e ~/.zshrc_beals_set ]]; then
 
-homebrewpath=false
+   #Install packages if they do not exit
+   packages=("neovim" "fzf" "zoxide" "bat" "tar" "yazi" "fastfetch" "eza")
 
-if [[ $(uname) == "Darwin" ]] && ! command -v brew &>/dev/null;  then
-   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+   homebrewpath=false
 
-elif ! command -v brew &>/dev/null; then 
-   git clone https://github.com/Homebrew/brew
-   mv brew .homebrew
-   export PATH=${HOME}/.homebrew/bin:${PATH}
-   homebrewpath=true
-fi
+   if [[ $(uname) == "Darwin" ]] && ! command -v brew &>/dev/null;  then
+      /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-if ! command -v yazi &>/dev/null; then
-   brew install yazi
-fi
+   elif ! command -v brew &>/dev/null; then 
+      git clone https://github.com/Homebrew/brew
+      mv brew .homebrew
+      export PATH=${HOME}/.homebrew/bin:${PATH}
+      homebrewpath=true
+   fi
 
 
-if ! command -v fastfetch &>/dev/null; then
-   brew install fastfetch
-fi
+   is_installed_with_brew() {
+      command -v brew &>/dev/null && brew list "$1" &>/dev/null
+   }
 
+   # Function to install a package using Homebrew
+   install_with_brew() {
+   if command -v brew &>/dev/null; then
+      if ! is_installed_with_brew "$1"; then
+         echo "Attempting to install $1 using Homebrew..."
+         brew install "$1"
+      fi
+   fi
+   }
 
-if ! command -v eza &>/dev/null; then
-   brew install eza
-fi
+   # Function to check if a package exists in DNF or APT before attempting install
+   package_exists_in_dnf() {
+   dnf list --available "$1" &>/dev/null
+   }
 
+   package_exists_in_apt() {
+   apt-cache show "$1" &>/dev/null
+   }
 
+   # Check system package manager and Homebrew before installation
+   if command -v dnf &>/dev/null; then
+   for package in "${packages[@]}"; do
+      if ! rpm -q "$package" &>/dev/null && ! is_installed_with_brew "$package"; then
+         if package_exists_in_dnf "$package"; then
+         echo "Installing $package with DNF..."
+         sudo dnf install "$package" -y || install_with_brew "$package"
+         else
+         echo "Package $package not found in DNF. Falling back to Homebrew..."
+         install_with_brew "$package"
+         fi
+      fi
+   done
 
-if command -v dnf &>/dev/null; then
-  for package in "${packages[@]}"; do
-    if ! rpm -q "$package" &>/dev/null; then
-      echo "Package $package is missing. Installing..."
-      sudo dnf install "$package" -y
-    fi
-  done
+   elif command -v apt &>/dev/null; then
+   for package in "${packages[@]}"; do
+      if ! dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed" && ! is_installed_with_brew "$package"; then
+         if package_exists_in_apt "$package"; then
+         echo "Installing $package with APT..."
+         sudo apt install "$package" -y || install_with_brew "$package"
+         else
+         echo "Package $package not found in APT. Falling back to Homebrew..."
+         install_with_brew "$package"
+         fi
+      fi
+   done
+   else
+   echo "Neither DNF nor APT found. Attempting installation using Homebrew..."
+   for package in "${packages[@]}"; do
+      if ! is_installed_with_brew "$package"; then
+         install_with_brew "$package"
+      fi
+   done
+   fi
 
-elif command -v apt &>/dev/null; then
-  for package in "${packages[@]}"; do
-    if ! dpkg -l | grep -q "$package"; then
-      echo "Package $package is missing. Installing..."
-      sudo apt install "$package" -y
-    fi
-  done
-fi
-
-if ! [ -f ".get_distro" ]; then
-   curl https://raw.githubusercontent.com/bealsbe/dotfiles/refs/heads/master/.get_distro -o .get_distro
-   chmod +x .get_distro
-fi
-
-
-current_distro=$(sh .get_distro 2>/dev/null)
+   if ! [ -f ".get_distro" ]; then
+      curl https://raw.githubusercontent.com/bealsbe/dotfiles/refs/heads/master/.get_distro -o .get_distro
+      chmod +x .get_distro
+   fi
+   
+   ##stupid but works 
+   touch .zshrc_beals_set
+fi 
+    
 #set kitty display and run fastfetch
 if [ "$TERM" = "xterm-kitty" ]; then 
    export TERM=xterm-256color
-fi
-
-if [[ $current_distro =~ "Fedora" ]]; then
-      fastfetch --logo ~/.config/icons/beals_logo.png --logo-width 28
+   fastfetch --logo ~/.config/icons/beals_logo.png --logo-width 28
 else 
    fastfetch
 fi
@@ -128,6 +155,7 @@ unsetopt nomatch
 export PATH="<path>:$PATH"
 export EDITOR=nvim
 
+current_distro=$(sh .get_distro 2>/dev/null)
 if [[ $(uname) == "Linux" ]] && [[ $current_distro =~ "Fedora" ]]; then
    alias update='sudo dnf upgrade --refresh -y; sudo pkcon update; fwupdmgr update; flatpak update -y; brew update; brew upgrade;'
    alias startp='startplasma-wayland'
