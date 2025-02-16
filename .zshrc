@@ -1,11 +1,6 @@
-if [[ -z $DISPLAY && $(tty) == /dev/tty2 && -z $(pgrep -x plasmashell) ]]; then
-    exec startplasma-wayland
-    exit
-fi
-
+#TODO: Make Seperate Install Script
 if ! [[ -e ~/.zshrc_beals_set ]]; then
   packages=("neovim" "fzf" "zoxide" "bat" "tar" "yazi" "fastfetch" "eza")
-
     echo "Installing config dependencies"
 
     if [[ $(uname) == "Darwin" ]] && ! command -v brew &>/dev/null; then
@@ -112,7 +107,9 @@ if [[ $DISPLAY ]] || [[ $TERM == 'xterm-256color' ]]; then
     zinit ice depth=1; zinit light romkatv/powerlevel10k
 fi
 
+
 # Add in zsh plugins
+source .catppuccin-theme.zsh
 zinit light zsh-users/zsh-syntax-highlighting
 zinit light zsh-users/zsh-completions
 zinit light zsh-users/zsh-autosuggestions
@@ -121,6 +118,7 @@ zinit snippet OMZL::git.zsh
 zinit snippet OMZP::git
 zinit snippet OMZP::sudo
 zinit snippet OMZP::command-not-found
+
 
 # Load completions
 autoload -Uz compinit && compinit
@@ -167,7 +165,7 @@ alias y='local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
         builtin cd -- "$cwd"
     fi
     rm -f -- "$tmp"'
-
+alias cd='z'
 zinit light-mode for \
     zdharma-continuum/zinit-annex-as-monitor \
     zdharma-continuum/zinit-annex-bin-gem-node \
@@ -179,3 +177,4 @@ zinit light-mode for \
 
 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 eval "$(zoxide init zsh)"
+
