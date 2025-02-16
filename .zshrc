@@ -3,9 +3,7 @@ if ! [[ -e ~/.zshrc_beals_set ]]; then
   packages=("neovim" "fzf" "zoxide" "bat" "tar" "yazi" "fastfetch" "eza")
     echo "Installing config dependencies"
 
-    if [[ $(uname) == "Darwin" ]] && ! command -v brew &>/dev/null; then
-        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    elif ! command -v brew &>/dev/null; then
+    if ! command -v brew &>/dev/null; then
         curl -fsSL -o install.sh https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
         /bin/bash install.sh
         rm install.sh
@@ -80,7 +78,6 @@ fi
 if [ "$TERM" = "xterm-kitty" ]; then 
     export TERM=xterm-256color
     fastfetch --logo ~/.config/icons/beals_logo.png --logo-width 28
-    eza --icons
 else 
     fastfetch
 fi
@@ -141,6 +138,7 @@ zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 zstyle ':completion:*' menu no
 zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza --icons --color $realpath'
+zstyle ':fzf-tab:complete:z:*' fzf-preview 'eza --icons --color $realpath'
 zstyle ':fzf-tab:complete:eza:*' fzf-preview 'eza --icons --color $realpath'
 zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'eza --icons --color $realpath'
 unsetopt nomatch
@@ -150,7 +148,7 @@ export EDITOR=nvim
 
 alias update='sudo dnf upgrade --refresh -y; sudo pkcon update; fwupdmgr update; flatpak update -y; brew update; brew upgrade;'
 alias startp='startplasma-wayland'
-alias logoutp='loginctl terminate-user beals'
+alias logoutp='loginctl terminate-user $USER'
 alias bios='systemctl reboot --firmware-setup'
 alias tclock='tty-clock -c -C 5 -r -n -r -f "%A, %B %d %Y"'
 alias neofetch='fastfetch --logo ~/.config/icons/beals_logo.png' 
