@@ -3,122 +3,113 @@ if [[ -z $DISPLAY && $(tty) == /dev/tty2 && -z $(pgrep -x plasmashell) ]]; then
     exit
 fi
 
-
-
 if ! [[ -e ~/.zshrc_beals_set ]]; then
+    echo "Installing config dependencies"
 
-   echo "Installing config dependencies"
+    if [[ $(uname) == "Darwin" ]] && ! command -v brew &>/dev/null; then
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    elif ! command -v brew &>/dev/null; then
+        curl -fsSL -o install.sh https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
+        /bin/bash install.sh
+        rm install.sh
+        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+    fi
 
-   if [[ $(uname) == "Darwin" ]] && ! command -v brew &>/dev/null;  then
-      /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    packages=("neovim" "fzf" "zoxide" "bat" "tar" "yazi" "fastfetch" "eza")
 
-   elif ! command -v brew &>/dev/null; then   
-	   homebrewpath=true
-      curl -fsSL -o install.sh https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
-      /bin/bash install.sh
-      rm install.sh
+    is_installed_with_brew() {
+        command -v brew &>/dev/null && brew list "$1" &>/dev/null
+    }
 
-   fi
+    install_with_brew() {
+        if command -v brew &>/dev/null; then
+            if ! is_installed_with_brew "$1"; then
+                echo "installing $1 with Homebrew..."
+                brew install "$1"
+            fi
+        fi
+    }
 
-   packages=("neovim" "fzf" "zoxide" "bat" "tar" "yazi" "fastfetch" "eza")
-   homebrewpath=false
+    package_exists_in_dnf() {
+        dnf list --available "$1" &>/dev/null
+    }
 
+    package_exists_in_apt() {
+        apt-cache show "$1" &>/dev/null
+    }
 
-   is_installed_with_brew() {
-      command -v brew &>/dev/null && brew list "$1" &>/dev/null
-   }
+    if command -v dnf &>/dev/null; then
+        for package in "${packages[@]}"; do
+            if ! rpm -q "$package" &>/dev/null && ! is_installed_with_brew "$package"; then
+                if package_exists_in_dnf "$package"; then
+                    echo "Installing $package with dnf..."
+                    sudo dnf install "$package" -y || install_with_brew "$package"
+                else
+                    echo "Falling back to Homebrew..."
+                    install_with_brew "$package"
+                fi
+            fi
+        done
+    elif command -v apt &>/dev/null; then
+        for package in "${packages[@]}"; do
+            if ! dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed" && ! is_installed_with_brew "$package"; then
+                if package_exists_in_apt "$package"; then
+                    echo "Installing $package with apt ..."
+                    sudo apt install "$package" -y || install_with_brew "$package"
+                else
+                    echo "Falling back to Homebrew..."
+                    install_with_brew "$package"
+                fi
+            fi
+        done
+    else
+        echo "Neither DNF nor APT found. Attempting installation using Homebrew..."
+        for package in "${packages[@]}"; do
+            if ! is_installed_with_brew "$package"; then
+                install_with_brew "$package"
+            fi
+        done
+    fi
 
-   install_with_brew() {
-   if command -v brew &>/dev/null; then
-      if ! is_installed_with_brew "$1"; then
-         echo "installing $1 with Homebrew..."
-         brew install "$1"
-      fi
-   fi
-   }
+    # Download Zinit, if it's not there yet
+    if [ ! -d "$ZINIT_HOME" ]; then
+        mkdir -p "$(dirname $ZINIT_HOME)"
+        git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
+    fi
 
-   package_exists_in_dnf() {
-   dnf list --available "$1" &>/dev/null
-   }
-
-   package_exists_in_apt() {
-   apt-cache show "$1" &>/dev/null
-   }
-
-   if command -v dnf &>/dev/null; then
-   for package in "${packages[@]}"; do
-      if ! rpm -q "$package" &>/dev/null && ! is_installed_with_brew "$package"; then
-         if package_exists_in_dnf "$package"; then
-         echo "Installing $package with dnf..."
-         sudo dnf install "$package" -y || install_with_brew "$package"
-         else
-         echo "Falling back to Homebrew..."
-         install_with_brew "$package"
-         fi
-      fi
-   done
-
-   elif command -v apt &>/dev/null; then
-   for package in "${packages[@]}"; do
-      if ! dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed" && ! is_installed_with_brew "$package"; then
-         if package_exists_in_apt "$package"; then
-         echo "Installing $package with apt ..."
-         sudo apt install "$package" -y || install_with_brew "$package"
-         else
-         echo "Falling back to Homebrew..."
-         install_with_brew "$package"
-         fi
-      fi
-   done
-   else
-   echo "Neither DNF nor APT found. Attempting installation using Homebrew..."
-   for package in "${packages[@]}"; do
-      if ! is_installed_with_brew "$package"; then
-         install_with_brew "$package"
-      fi
-   done
-   fi
-
-   if ! [ -f ".get_distro" ]; then
-      curl https://raw.githubusercontent.com/bealsbe/dotfiles/refs/heads/master/.get_distro -o .get_distro
-      chmod +x .get_distro
-   fi
-   
-   ##stupid but works 
-   touch .zshrc_beals_set
-fi 
-    
-#set kitty display and run fastfetch
-if [ "$TERM" = "xterm-kitty" ]; then 
-   export TERM=xterm-256color
-   fastfetch --logo ~/.config/icons/beals_logo.png --logo-width 28
-   eza --icons
-else 
-   fastfetch
+    # Stupid but works
+    touch .zshrc_beals_set
 fi
 
+#set kitty display and run fastfetch
+if [ "$TERM" = "xterm-kitty" ]; then 
+    export TERM=xterm-256color
+    fastfetch --logo ~/.config/icons/beals_logo.png --logo-width 28
+    eza --icons
+else 
+    fastfetch
+fi
 
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+    source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
 # Set the directory we want to store zinit and plugins
 ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
 
-# Download Zinit, if it's not there yet
 if [ ! -d "$ZINIT_HOME" ]; then
-   mkdir -p "$(dirname $ZINIT_HOME)"
-   git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
+    mkdir -p "$(dirname $ZINIT_HOME)"
+    git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
 fi
 
 source "${ZINIT_HOME}/zinit.zsh"
 
 # Add in Powerlevel10k
 if [[ $DISPLAY ]] || [[ $TERM == 'xterm-256color' ]]; then
-  zinit ice depth=1; zinit light romkatv/powerlevel10k
+    zinit ice depth=1; zinit light romkatv/powerlevel10k
 fi
 
 # Add in zsh plugins
@@ -148,7 +139,6 @@ setopt hist_save_no_dups
 setopt hist_ignore_dups
 setopt hist_find_no_dups
 
-
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 zstyle ':completion:*' menu no
@@ -160,28 +150,23 @@ unsetopt nomatch
 export PATH="<path>:$PATH"
 export EDITOR=nvim
 
-current_distro=$(sh .get_distro 2>/dev/null)
-if [[ $(uname) == "Linux" ]] && [[ $current_distro =~ "Fedora" ]]; then
-   alias update='sudo dnf upgrade --refresh -y; sudo pkcon update; fwupdmgr update; flatpak update -y; brew update; brew upgrade;'
-   alias startp='startplasma-wayland'
-   alias logoutp='loginctl terminate-user beals'
-   alias bios='systemctl reboot --firmware-setup'
-   alias tclock='tty-clock -c -C 5 -r -n -r -f "%A, %B %d %Y"'
-   alias neofetch='fastfetch --logo ~/.config/icons/beals_logo.png' 
-
-fi
-
+alias update='sudo dnf upgrade --refresh -y; sudo pkcon update; fwupdmgr update; flatpak update -y; brew update; brew upgrade;'
+alias startp='startplasma-wayland'
+alias logoutp='loginctl terminate-user beals'
+alias bios='systemctl reboot --firmware-setup'
+alias tclock='tty-clock -c -C 5 -r -n -r -f "%A, %B %d %Y"'
+alias neofetch='fastfetch --logo ~/.config/icons/beals_logo.png' 
 alias cat='bat'
 alias ls='eza --color --icons'
 alias tree="tree -L 3 -a -I '.git"
 alias vim='nvim'
 alias c='clear'
 alias y='local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
-	yazi "$@" --cwd-file="$tmp"
-	if cwd="$(command cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
-		builtin cd -- "$cwd"
-	fi
-	rm -f -- "$tmp"'
+    yazi "$@" --cwd-file="$tmp"
+    if cwd="$(command cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+        builtin cd -- "$cwd"
+    fi
+    rm -f -- "$tmp"'
 
 zinit light-mode for \
     zdharma-continuum/zinit-annex-as-monitor \
@@ -192,7 +177,5 @@ zinit light-mode for \
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
-if [[ $(uname) == "Linux" ]] && [[ $homebrew == false ]]; then
-   export PATH=${HOME}/homebrew/bin:${PATH}
-fi
 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+eval "$(zoxide init zsh)"
