@@ -1,3 +1,7 @@
+[ButtonColors]
+ButtonBackgroundOpacityActive=54
+ButtonBackgroundOpacityInactive=54
+
 [Global]
 LookAndFeelSet=org.kde.breezedark.desktop
 
@@ -8,17 +12,26 @@ ShadowSize=ShadowVeryLarge
 ButtonGradient=true
 DockWidgetDrawFrame=true
 MenuItemDrawStrongFocus=false
-MenuOpacity=81
+MenuOpacity=70
+MnemonicsMode=MN_NEVER
+ScrollBarSeparator=true
 SidePanelDrawFrame=true
+SplitterProxyEnabled=true
+TabBarDrawCenteredTabs=true
+
+[TitleBarSpacing]
+TitleBarBottomMargin=1.9
+TitleBarTopMargin=1.9
 
 [Windeco]
-ButtonIconStyle=StyleRedmond10
+AnimationsSpeedRelativeSystem=2
+ButtonIconStyle=StyleRedmond11
 ButtonShape=ShapeFullHeightRoundedRectangle
 DrawBackgroundGradient=true
 IconSize=IconSmallMedium
+WindowCornerRadius=3.5
 
 [WindowOutlineStyle]
-ThinWindowOutlineThickness=2.5
+ThinWindowOutlineThickness=3
 WindowOutlineAccentColorOpacityActive=80
 WindowOutlineAccentWithContrastOpacityInactive=55
-

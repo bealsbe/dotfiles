@@ -1,37 +1,42 @@
+if [[ -z $DISPLAY && $(tty) == /dev/tty2 && -z $(pgrep -x plasmashell) ]]; then
+    exec startplasma-wayland
+    exit
+fi
+
+
 
 if ! [[ -e ~/.zshrc_beals_set ]]; then
 
-   #Install packages if they do not exit
-   packages=("neovim" "fzf" "zoxide" "bat" "tar" "yazi" "fastfetch" "eza")
-
-   homebrewpath=false
+   echo "Installing config dependencies"
 
    if [[ $(uname) == "Darwin" ]] && ! command -v brew &>/dev/null;  then
       /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-   elif ! command -v brew &>/dev/null; then 
-      git clone https://github.com/Homebrew/brew
-      mv brew .homebrew
-      export PATH=${HOME}/.homebrew/bin:${PATH}
-      homebrewpath=true
+   elif ! command -v brew &>/dev/null; then   
+	   homebrewpath=true
+      curl -fsSL -o install.sh https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
+      /bin/bash install.sh
+      rm install.sh
+
    fi
+
+   packages=("neovim" "fzf" "zoxide" "bat" "tar" "yazi" "fastfetch" "eza")
+   homebrewpath=false
 
 
    is_installed_with_brew() {
       command -v brew &>/dev/null && brew list "$1" &>/dev/null
    }
 
-   # Function to install a package using Homebrew
    install_with_brew() {
    if command -v brew &>/dev/null; then
       if ! is_installed_with_brew "$1"; then
-         echo "Attempting to install $1 using Homebrew..."
+         echo "installing $1 with Homebrew..."
          brew install "$1"
       fi
    fi
    }
 
-   # Function to check if a package exists in DNF or APT before attempting install
    package_exists_in_dnf() {
    dnf list --available "$1" &>/dev/null
    }
@@ -40,15 +45,14 @@ if ! [[ -e ~/.zshrc_beals_set ]]; then
    apt-cache show "$1" &>/dev/null
    }
 
-   # Check system package manager and Homebrew before installation
    if command -v dnf &>/dev/null; then
    for package in "${packages[@]}"; do
       if ! rpm -q "$package" &>/dev/null && ! is_installed_with_brew "$package"; then
          if package_exists_in_dnf "$package"; then
-         echo "Installing $package with DNF..."
+         echo "Installing $package with dnf..."
          sudo dnf install "$package" -y || install_with_brew "$package"
          else
-         echo "Package $package not found in DNF. Falling back to Homebrew..."
+         echo "Falling back to Homebrew..."
          install_with_brew "$package"
          fi
       fi
@@ -58,10 +62,10 @@ if ! [[ -e ~/.zshrc_beals_set ]]; then
    for package in "${packages[@]}"; do
       if ! dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed" && ! is_installed_with_brew "$package"; then
          if package_exists_in_apt "$package"; then
-         echo "Installing $package with APT..."
+         echo "Installing $package with apt ..."
          sudo apt install "$package" -y || install_with_brew "$package"
          else
-         echo "Package $package not found in APT. Falling back to Homebrew..."
+         echo "Falling back to Homebrew..."
          install_with_brew "$package"
          fi
       fi
@@ -88,6 +92,7 @@ fi
 if [ "$TERM" = "xterm-kitty" ]; then 
    export TERM=xterm-256color
    fastfetch --logo ~/.config/icons/beals_logo.png --logo-width 28
+   eza --icons
 else 
    fastfetch
 fi
@@ -190,3 +195,4 @@ zinit light-mode for \
 if [[ $(uname) == "Linux" ]] && [[ $homebrew == false ]]; then
    export PATH=${HOME}/homebrew/bin:${PATH}
 fi
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
