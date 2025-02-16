@@ -25,13 +25,17 @@ require("lazy").setup({
   { import = "plugins" },
 }, lazy_config)
 
--- load theme
 dofile(vim.g.base46_cache .. "defaults")
 dofile(vim.g.base46_cache .. "statusline")
 
 require "options"
+require "vim-options"
 require "nvchad.autocmds"
 
 vim.schedule(function()
   require "mappings"
 end)
+
+require("catppuccin").setup()
+vim.cmd.colorscheme "catppuccin-mocha"
+
