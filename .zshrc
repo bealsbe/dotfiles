@@ -4,6 +4,8 @@ if [[ -z $DISPLAY && $(tty) == /dev/tty2 && -z $(pgrep -x plasmashell) ]]; then
 fi
 
 if ! [[ -e ~/.zshrc_beals_set ]]; then
+  packages=("neovim" "fzf" "zoxide" "bat" "tar" "yazi" "fastfetch" "eza")
+
     echo "Installing config dependencies"
 
     if [[ $(uname) == "Darwin" ]] && ! command -v brew &>/dev/null; then
@@ -14,8 +16,6 @@ if ! [[ -e ~/.zshrc_beals_set ]]; then
         rm install.sh
         eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
     fi
-
-    packages=("neovim" "fzf" "zoxide" "bat" "tar" "yazi" "fastfetch" "eza")
 
     is_installed_with_brew() {
         command -v brew &>/dev/null && brew list "$1" &>/dev/null
