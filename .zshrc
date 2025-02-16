@@ -1,4 +1,4 @@
-#TODO: Make Seperate Install Script
+#TODO: Make Install Script
 if ! [[ -e ~/.zshrc_beals_set ]]; then
   packages=("neovim" "fzf" "zoxide" "bat" "tar" "yazi" "fastfetch" "eza")
     echo "Installing config dependencies"
