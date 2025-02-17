@@ -3,7 +3,7 @@ if ! [[ -e ~/.zshrc_beals_set ]]; then
   packages=("neovim" "fzf" "zoxide" "bat" "tar" "yazi" "fastfetch" "eza")
     echo "Installing config dependencies"
 
-    if ! command -v brew &>/dev/null; then
+    if ! command -v /home/linuxbrew/.linuxbrew/bin/brew &>/dev/null; then
         curl -fsSL -o install.sh https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
         /bin/bash install.sh
         rm install.sh
@@ -75,7 +75,7 @@ if ! [[ -e ~/.zshrc_beals_set ]]; then
 fi
 
 #set kitty display and run fastfetch
-if [ "$TERM" = "xterm-kitty" ]; then 
+if [ "$TERM" = "xterm-kitty" ] || [ "$TERM" = "xterm-ghostty" ]; then 
     export TERM=xterm-256color
     fastfetch --logo ~/.config/icons/beals_logo.png --logo-width 28
 else 
